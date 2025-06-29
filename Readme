@@ -32,31 +32,16 @@ Tạo file `ip_monitor.py` với code từ repository này.
 
 ### 3. Cài đặt dependencies
 ```bash
-pip3 install requests
+pip3 install requests python-dotenv
 ```
 
-### 4. Tạo file cấu hình
+### 4. Cấu hình environment variables
 ```bash
-cat > config.json << 'EOF'
-{
-  "check_interval": 300,
-  "notification_methods": ["email"],
-  "email": {
-    "smtp_server": "smtp.gmail.com",
-    "smtp_port": 587,
-    "sender_email": "your-email@gmail.com",
-    "sender_password": "your-app-password",
-    "recipient_email": "recipient@gmail.com"
-  },
-  "telegram": {
-    "bot_token": "YOUR_BOT_TOKEN",
-    "chat_id": "YOUR_CHAT_ID"
-  },
-  "discord": {
-    "webhook_url": "YOUR_DISCORD_WEBHOOK_URL"
-  }
-}
-EOF
+# Sao chép file env mẫu
+cp .env.example .env
+
+# Chỉnh sửa file .env với thông tin của bạn
+nano .env
 ```
 
 ### 5. Kiểm tra hoạt động
@@ -66,6 +51,34 @@ python3 ip_monitor.py --check-ip
 
 ## ⚙️ Cấu hình chi tiết
 
+### 🌍 Environment Variables (Khuyến nghị)
+
+Bot hỗ trợ cấu hình qua **environment variables** để bảo mật tốt hơn. Tạo file `.env`:
+
+```bash
+# Sao chép file mẫu
+cp .env.example .env
+```
+
+**Ví dụ file `.env`:**
+```bash
+# Cài đặt chung
+CHECK_INTERVAL=300
+NOTIFICATION_METHODS=email,telegram,discord
+
+# Email
+EMAIL_SENDER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_RECIPIENT=recipient@gmail.com
+
+# Telegram - Gửi đến nhiều chat cùng lúc
+TELEGRAM_BOT_TOKEN=123456789:ABCDEF...
+TELEGRAM_CHAT_IDS=123456789,987654321,-1001234567890
+
+# Discord - Gửi đến nhiều webhook cùng lúc  
+DISCORD_WEBHOOK_URLS=https://discord.com/api/webhooks/111/AAA,https://discord.com/api/webhooks/222/BBB
+```
+
 ### 📧 Cấu hình Email (Gmail)
 
 1. **Bật xác thực 2 bước** cho Gmail
@@ -73,66 +86,73 @@ python3 ip_monitor.py --check-ip
    - Vào [Google Account Settings](https://myaccount.google.com/)
    - Security → 2-Step Verification → App passwords
    - Tạo password cho "Mail"
-3. **Cập nhật config.json**:
-```json
-{
-  "notification_methods": ["email"],
-  "email": {
-    "smtp_server": "smtp.gmail.com",
-    "smtp_port": 587,
-    "sender_email": "your-email@gmail.com",
-    "sender_password": "app-password-16-chars",
-    "recipient_email": "recipient@gmail.com"
-  }
-}
+3. **Thêm vào `.env`**:
+```bash
+EMAIL_SENDER=your-email@gmail.com
+EMAIL_PASSWORD=app-password-16-chars
+EMAIL_RECIPIENT=recipient@gmail.com
 ```
 
-### 📱 Cấu hình Telegram
+### 📱 Cấu hình Telegram (Multiple Chat IDs)
 
 1. **Tạo bot**:
    - Nhắn tin với [@BotFather](https://t.me/botfather)
    - Gửi `/newbot` và làm theo hướng dẫn
    - Lưu **bot token**
 
-2. **Lấy Chat ID**:
-   - Nhắn tin với bot vừa tạo
-   - Truy cập: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
-   - Tìm "chat":{"id": YOUR_CHAT_ID}
+2. **Lấy Chat IDs**:
+   ```bash
+   # Nhắn tin với bot, sau đó truy cập URL này:
+   curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates"
+   
+   # Tìm "chat":{"id": YOUR_CHAT_ID} trong response
+   ```
 
-3. **Cập nhật config.json**:
-```json
-{
-  "notification_methods": ["telegram"],
-  "telegram": {
-    "bot_token": "123456789:ABCDEF...",
-    "chat_id": "123456789"
-  }
-}
+3. **Cấu hình nhiều chat IDs**:
+```bash
+TELEGRAM_BOT_TOKEN=123456789:ABCDEF...
+# Gửi đến nhiều chat/group cùng lúc (cách nhau bởi dấu phẩy)
+TELEGRAM_CHAT_IDS=123456789,987654321,-1001234567890
 ```
 
-### 💬 Cấu hình Discord
+### 💬 Cấu hình Discord (Multiple Webhooks)
 
-1. **Tạo webhook**:
+1. **Tạo webhooks**:
    - Vào Discord server → Server Settings
    - Integrations → Webhooks → New Webhook
-   - Copy webhook URL
+   - Copy webhook URL cho từng server/channel
 
-2. **Cập nhật config.json**:
-```json
-{
-  "notification_methods": ["discord"],
-  "discord": {
-    "webhook_url": "https://discord.com/api/webhooks/..."
-  }
-}
+2. **Cấu hình nhiều webhooks**:
+```bash
+# Gửi đến nhiều Discord server/channel cùng lúc
+DISCORD_WEBHOOK_URLS=https://discord.com/api/webhooks/111/AAA,https://discord.com/api/webhooks/222/BBB
 ```
 
-### ⚡ Cấu hình đa kênh
+### 🔄 Cấu hình JSON (Tùy chọn)
+
+Nếu không muốn dùng `.env`, bạn có thể dùng `config.json`:
+
 ```json
 {
-  "notification_methods": ["email", "telegram", "discord"],
-  // ... cấu hình tất cả các kênh
+  "notification_methods": ["telegram", "discord"],
+  "telegram": {
+    "bot_token": "123456789:ABCDEF...",
+    "chat_ids": ["123456789", "987654321", "-1001234567890"]
+  },
+  "discord": {
+    "webhook_urls": [
+      "https://discord.com/api/webhooks/111/AAA",
+      "https://discord.com/api/webhooks/222/BBB"
+    ]
+  }
 }
+```### ⚡ Cấu hình đa kênh
+```bash
+# Gửi thông báo đến tất cả các kênh
+NOTIFICATION_METHODS=email,telegram,discord
+
+# Hoặc chỉ một số kênh
+NOTIFICATION_METHODS=telegram,discord
 ```
 
 ## 🔧 Cách sử dụng
@@ -201,6 +221,65 @@ sudo systemctl restart ip-monitor
 sudo systemctl disable ip-monitor
 ```
 
+## 🐳 Chạy với Docker
+
+### Docker Compose (Khuyến nghị)
+
+1. **Tạo file docker-compose.yml**:
+```yaml
+version: '3.8'
+
+services:
+  ip-monitor:
+    build: .
+    container_name: ip-monitor-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - CONFIG_FILE=/app/data/config.json
+```
+
+2. **Chạy với Docker Compose**:
+```bash
+# Build và start
+docker-compose up -d
+
+# Xem logs
+docker-compose logs -f
+
+# Dừng
+docker-compose down
+
+# Rebuild
+docker-compose up -d --build
+```
+
+### Docker thông thường
+
+```bash
+# Build image
+docker build -t ip-monitor-bot .
+
+# Chạy container
+docker run -d \
+  --name ip-monitor \
+  --restart unless-stopped \
+  --env-file .env \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/logs:/app/logs \
+  ip-monitor-bot
+
+# Xem logs
+docker logs -f ip-monitor
+
+# Dừng container
+docker stop ip-monitor && docker rm ip-monitor
+```
+
 ## 📝 Xem logs
 
 ### Log file
@@ -224,18 +303,57 @@ sudo journalctl -u ip-monitor --since today
 sudo journalctl -u ip-monitor --since "1 hour ago"
 ```
 
-## 🛠️ Tùy chỉnh nâng cao
+### Docker logs
+```bash
+# Docker Compose
+docker-compose logs -f
 
-### Thay đổi tần suất kiểm tra
-```json
-{
-  "check_interval": 60,  // 1 phút
-  // hoặc
-  "check_interval": 1800  // 30 phút
-}
+# Docker thông thường
+docker logs -f ip-monitor
 ```
 
-### Script tiện ích
+## 🛠️ Tùy chỉnh nâng cao
+
+### Environment Variables đầy đủ
+
+```bash
+# File .env với tất cả tùy chọn
+
+# =============================================================================
+# GENERAL SETTINGS
+# =============================================================================
+CHECK_INTERVAL=300
+NOTIFICATION_METHODS=email,telegram,discord
+LOG_LEVEL=INFO
+
+# =============================================================================
+# EMAIL CONFIGURATION
+# =============================================================================
+EMAIL_SMTP_SERVER=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SENDER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_RECIPIENT=recipient@gmail.com
+
+# =============================================================================
+# TELEGRAM CONFIGURATION (Multiple Chat Support)
+# =============================================================================
+TELEGRAM_BOT_TOKEN=123456789:ABCDEF...
+# Gửi đến nhiều chat/group cùng lúc
+TELEGRAM_CHAT_IDS=123456789,987654321,-1001234567890
+# Hoặc chỉ một chat (tương thích ngược)
+TELEGRAM_CHAT_ID=123456789
+
+# =============================================================================
+# DISCORD CONFIGURATION (Multiple Webhook Support)
+# =============================================================================
+# Gửi đến nhiều server/channel cùng lúc
+DISCORD_WEBHOOK_URLS=https://discord.com/api/webhooks/111/AAA,https://discord.com/api/webhooks/222/BBB
+# Hoặc chỉ một webhook (tương thích ngược)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/111/AAA
+```
+
+### Script quản lý tiện ích
 
 Tạo script `manage.sh`:
 ```bash
@@ -263,8 +381,16 @@ case "$1" in
     log)
         tail -f ip_monitor.log
         ;;
+    test-telegram)
+        echo "Testing Telegram notifications..."
+        # Test với IP giả
+        ;;
+    test-discord)
+        echo "Testing Discord notifications..."
+        # Test với IP giả
+        ;;
     *)
-        echo "Usage: $0 {start|stop|status|ip|log}"
+        echo "Usage: $0 {start|stop|status|ip|log|test-telegram|test-discord}"
         ;;
 esac
 ```
@@ -282,55 +408,93 @@ chmod +x manage.sh
 
 ### Lỗi thường gặp
 
-**1. "requests module not found"**
+**1. "python-dotenv module not found"**
 ```bash
-pip3 install requests
+pip3 install python-dotenv
 # hoặc
-python3 -m pip install requests --user
+python3 -m pip install python-dotenv --user
 ```
 
-**2. "Permission denied" khi tạo service**
+**2. "Cannot load .env file"**
 ```bash
-# Đảm bảo có quyền sudo
-sudo systemctl daemon-reload
+# Kiểm tra file .env có tồn tại
+ls -la .env
+
+# Kiểm tra quyền file
+chmod 644 .env
 ```
 
-**3. "Cannot get IP address"**
-- Kiểm tra internet connection
-- Bot sẽ thử nhiều service khác nhau
+**3. "Multiple Telegram chat IDs not working"**
+```bash
+# Kiểm tra format trong .env
+TELEGRAM_CHAT_IDS=123456789,987654321,-1001234567890
 
-**4. Email không gửi được**
-- Đảm bảo đã bật 2FA và tạo App Password
-- Kiểm tra SMTP settings
-- Test với telnet: `telnet smtp.gmail.com 587`
+# Đảm bảo không có khoảng trắng
+# ĐÚNG: 123,456,789
+# SAI:   123, 456, 789
+```
 
-**5. Telegram không hoạt động**
-- Kiểm tra bot token và chat ID
-- Đảm bảo đã nhắn tin với bot trước
-- Test API: `curl "https://api.telegram.org/bot<TOKEN>/getMe"`
+**4. "Discord webhook failed"**
+```bash
+# Test webhook thủ công
+curl -H "Content-Type: application/json" \
+     -d '{"content":"Test message"}' \
+     "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+```
+
+**5. Environment variables không được đọc**
+```bash
+# Kiểm tra file .env
+cat .env
+
+# Kiểm tra python-dotenv
+python3 -c "from dotenv import load_dotenv; load_dotenv(); import os; print(os.getenv('TELEGRAM_BOT_TOKEN'))"
+```
 
 ### Debug mode
 
-Thêm debug logging:
-```python
-logging.basicConfig(level=logging.DEBUG)
-```
-
-### Kiểm tra kết nối
+Thêm vào `.env`:
 ```bash
-# Test internet
-ping -c 3 8.8.8.8
-
-# Test DNS
-nslookup api.ipify.org
-
-# Test HTTPS
-curl -s https://api.ipify.org?format=json
+LOG_LEVEL=DEBUG
 ```
 
-## 📊 Giám sát
+Hoặc chạy với debug:
+```bash
+python3 -c "
+import logging
+logging.basicConfig(level=logging.DEBUG)
+exec(open('ip_monitor.py').read())
+"
+```
 
-### Tạo simple monitoring script
+### Test từng thành phần
+
+```bash
+# Test lấy IP
+python3 -c "
+from ip_monitor import IPMonitor
+monitor = IPMonitor()
+print('IP:', monitor.get_public_ip())
+"
+
+# Test Telegram
+python3 -c "
+from ip_monitor import IPMonitor
+monitor = IPMonitor()
+monitor.send_telegram_notification('1.1.1.1', '2.2.2.2')
+"
+
+# Test Discord
+python3 -c "
+from ip_monitor import IPMonitor
+monitor = IPMonitor()
+monitor.send_discord_notification('1.1.1.1', '2.2.2.2')
+"
+```
+
+## 📊 Giám sát và Bảo mật
+
+### Tạo monitoring script
 ```bash
 #!/bin/bash
 # monitor.sh
@@ -345,40 +509,60 @@ fi
 Thêm vào crontab:
 ```bash
 crontab -e
-# Thêm dòng này để kiểm tra mỗi 5 phút
+# Kiểm tra mỗi 5 phút
 */5 * * * * /path/to/monitor.sh
 ```
 
-## 🔐 Bảo mật
+### Bảo mật file .env
+```bash
+# Chỉ owner có thể đọc/ghi
+chmod 600 .env
 
-- **Không commit** file `config.json` lên git
-- **Sử dụng App Password** thay vì password thật cho email
-- **Giới hạn quyền file**: `chmod 600 config.json`
-- **Chạy với user thường**, không dùng root
+# Kiểm tra quyền
+ls -la .env
+```
+
+### Backup cấu hình
+```bash
+# Tạo backup (không bao gồm sensitive data)
+cp config.json config.json.backup
+
+# Hoặc backup toàn bộ (cẩn thận với .env)
+tar -czf ip-monitor-backup.tar.gz --exclude='.env' ~/ip-monitor-bot/
+```
+
+## 🚀 Tính năng mới
+
+### Multiple Recipients Support
+- ✅ **Telegram**: Gửi đến nhiều chat/group cùng lúc
+- ✅ **Discord**: Gửi đến nhiều server/channel cùng lúc  
+- ✅ **Environment Variables**: Cấu hình qua .env file
+- ✅ **Docker Support**: Chạy trong container
+- ✅ **Backward Compatibility**: Tương thích với config cũ
+
+### Ví dụ cấu hình đa kênh
+
+```bash
+# .env file
+NOTIFICATION_METHODS=telegram,discord
+
+# Telegram: Gửi đến 3 chat khác nhau
+TELEGRAM_BOT_TOKEN=123456789:ABCDEF...
+TELEGRAM_CHAT_IDS=123456789,987654321,-1001234567890
+
+# Discord: Gửi đến 2 server khác nhau
+DISCORD_WEBHOOK_URLS=https://discord.com/api/webhooks/111/AAA,https://discord.com/api/webhooks/222/BBB
+```
+
+Bot sẽ gửi thông báo đến tất cả 5 đích (3 Telegram + 2 Discord) khi IP thay đổi!
 
 ## 📈 Performance
 
 - **CPU usage**: ~0.1% khi idle
-- **Memory usage**: ~10-20MB
+- **Memory usage**: ~15-25MB (với python-dotenv)
 - **Network**: 1-2KB per check
 - **Disk**: Log file tăng ~1MB/tháng
-
-## 🤝 Đóng góp
-
-1. Fork repository
-2. Tạo feature branch
-3. Commit changes
-4. Push và tạo Pull Request
-
-## 📄 License
-
-MIT License - xem file LICENSE để biết chi tiết.
-
-## 🆘 Hỗ trợ
-
-- **Issues**: Tạo issue trên GitHub
-- **Email**: your-email@domain.com
-- **Telegram**: @yourusername
+- **Scalability**: Hỗ trợ unlimited chat IDs/webhooks
 
 ---
 
