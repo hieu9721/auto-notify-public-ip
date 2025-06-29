@@ -32,7 +32,7 @@ if [ ! -f "config.json" ]; then
     "chat_id": "YOUR_CHAT_ID"
   },
   "discord": {
-    "webhook_url": "https://discord.com/api/webhooks/1388807634429153311/cIdHskKC9r1-PLs63po5RzUk8bERP0JhGJyDsME23y1HKC5dpTWscC70OSkffsH6HR0f"
+    "webhook_url": ""
   }
 }
 EOF
