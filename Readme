@@ -1,0 +1,385 @@
+# 🌐 IP Monitor Bot
+
+Bot theo dõi địa chỉ IP public và gửi thông báo tự động khi có thay đổi. Hỗ trợ thông báo qua Email, Telegram và Discord.
+
+## ✨ Tính năng
+
+- 🔄 **Theo dõi IP liên tục** với khoảng thời gian tùy chỉnh
+- 📧 **Thông báo đa kênh**: Email, Telegram, Discord
+- 📝 **Ghi log chi tiết** với timestamp
+- 🔄 **Khôi phục tự động** khi gặp lỗi
+- ⚙️ **Chạy như systemd service** hoặc thủ công
+- 🛡️ **Backup multiple IP services** để đảm bảo độ tin cậy
+- 🎯 **Lightweight** - chỉ cần 1 dependency duy nhất
+
+## 📋 Yêu cầu hệ thống
+
+- **Python 3.6+**
+- **Linux** (Ubuntu, CentOS, Debian, Arch, etc.)
+- **Internet connection**
+- **pip3** hoặc **python3-pip**
+
+## 🚀 Cài đặt nhanh
+
+### 1. Clone hoặc tải project
+```bash
+mkdir ~/ip-monitor-bot
+cd ~/ip-monitor-bot
+```
+
+### 2. Tạo các file chính
+Tạo file `ip_monitor.py` với code từ repository này.
+
+### 3. Cài đặt dependencies
+```bash
+pip3 install requests
+```
+
+### 4. Tạo file cấu hình
+```bash
+cat > config.json << 'EOF'
+{
+  "check_interval": 300,
+  "notification_methods": ["email"],
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "your-email@gmail.com",
+    "sender_password": "your-app-password",
+    "recipient_email": "recipient@gmail.com"
+  },
+  "telegram": {
+    "bot_token": "YOUR_BOT_TOKEN",
+    "chat_id": "YOUR_CHAT_ID"
+  },
+  "discord": {
+    "webhook_url": "YOUR_DISCORD_WEBHOOK_URL"
+  }
+}
+EOF
+```
+
+### 5. Kiểm tra hoạt động
+```bash
+python3 ip_monitor.py --check-ip
+```
+
+## ⚙️ Cấu hình chi tiết
+
+### 📧 Cấu hình Email (Gmail)
+
+1. **Bật xác thực 2 bước** cho Gmail
+2. **Tạo App Password**:
+   - Vào [Google Account Settings](https://myaccount.google.com/)
+   - Security → 2-Step Verification → App passwords
+   - Tạo password cho "Mail"
+3. **Cập nhật config.json**:
+```json
+{
+  "notification_methods": ["email"],
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "your-email@gmail.com",
+    "sender_password": "app-password-16-chars",
+    "recipient_email": "recipient@gmail.com"
+  }
+}
+```
+
+### 📱 Cấu hình Telegram
+
+1. **Tạo bot**:
+   - Nhắn tin với [@BotFather](https://t.me/botfather)
+   - Gửi `/newbot` và làm theo hướng dẫn
+   - Lưu **bot token**
+
+2. **Lấy Chat ID**:
+   - Nhắn tin với bot vừa tạo
+   - Truy cập: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+   - Tìm "chat":{"id": YOUR_CHAT_ID}
+
+3. **Cập nhật config.json**:
+```json
+{
+  "notification_methods": ["telegram"],
+  "telegram": {
+    "bot_token": "123456789:ABCDEF...",
+    "chat_id": "123456789"
+  }
+}
+```
+
+### 💬 Cấu hình Discord
+
+1. **Tạo webhook**:
+   - Vào Discord server → Server Settings
+   - Integrations → Webhooks → New Webhook
+   - Copy webhook URL
+
+2. **Cập nhật config.json**:
+```json
+{
+  "notification_methods": ["discord"],
+  "discord": {
+    "webhook_url": "https://discord.com/api/webhooks/..."
+  }
+}
+```
+
+### ⚡ Cấu hình đa kênh
+```json
+{
+  "notification_methods": ["email", "telegram", "discord"],
+  // ... cấu hình tất cả các kênh
+}
+```
+
+## 🔧 Cách sử dụng
+
+### Chạy thủ công
+```bash
+# Kiểm tra IP hiện tại
+python3 ip_monitor.py --check-ip
+
+# Chạy bot (Ctrl+C để dừng)
+python3 ip_monitor.py
+
+# Chạy với file config tùy chỉnh
+python3 ip_monitor.py --config my_config.json
+```
+
+### Chạy như systemd service
+
+1. **Tạo service file**:
+```bash
+sudo tee /etc/systemd/system/ip-monitor.service > /dev/null << EOF
+[Unit]
+Description=IP Monitor Bot
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$HOME/ip-monitor-bot
+ExecStart=/usr/bin/python3 $HOME/ip-monitor-bot/ip_monitor.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+2. **Khởi động service**:
+```bash
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Enable và start service
+sudo systemctl enable ip-monitor
+sudo systemctl start ip-monitor
+
+# Kiểm tra trạng thái
+sudo systemctl status ip-monitor
+
+# Xem logs
+sudo journalctl -u ip-monitor -f
+```
+
+3. **Quản lý service**:
+```bash
+# Dừng
+sudo systemctl stop ip-monitor
+
+# Khởi động lại
+sudo systemctl restart ip-monitor
+
+# Vô hiệu hóa
+sudo systemctl disable ip-monitor
+```
+
+## 📝 Xem logs
+
+### Log file
+```bash
+# Xem log real-time
+tail -f ~/ip-monitor-bot/ip_monitor.log
+
+# Xem log cuối
+tail -20 ~/ip-monitor-bot/ip_monitor.log
+```
+
+### System journal (nếu chạy như service)
+```bash
+# Xem log real-time
+sudo journalctl -u ip-monitor -f
+
+# Xem log hôm nay
+sudo journalctl -u ip-monitor --since today
+
+# Xem log 1 giờ qua
+sudo journalctl -u ip-monitor --since "1 hour ago"
+```
+
+## 🛠️ Tùy chỉnh nâng cao
+
+### Thay đổi tần suất kiểm tra
+```json
+{
+  "check_interval": 60,  // 1 phút
+  // hoặc
+  "check_interval": 1800  // 30 phút
+}
+```
+
+### Script tiện ích
+
+Tạo script `manage.sh`:
+```bash
+#!/bin/bash
+
+case "$1" in
+    start)
+        python3 ip_monitor.py &
+        echo "Bot started in background"
+        ;;
+    stop)
+        pkill -f ip_monitor.py
+        echo "Bot stopped"
+        ;;
+    status)
+        if pgrep -f ip_monitor.py > /dev/null; then
+            echo "Bot is running"
+        else
+            echo "Bot is not running"
+        fi
+        ;;
+    ip)
+        python3 ip_monitor.py --check-ip
+        ;;
+    log)
+        tail -f ip_monitor.log
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|ip|log}"
+        ;;
+esac
+```
+
+```bash
+chmod +x manage.sh
+./manage.sh start   # Khởi động
+./manage.sh status  # Kiểm tra trạng thái
+./manage.sh ip      # Xem IP hiện tại
+./manage.sh log     # Xem log
+./manage.sh stop    # Dừng
+```
+
+## 🐛 Troubleshooting
+
+### Lỗi thường gặp
+
+**1. "requests module not found"**
+```bash
+pip3 install requests
+# hoặc
+python3 -m pip install requests --user
+```
+
+**2. "Permission denied" khi tạo service**
+```bash
+# Đảm bảo có quyền sudo
+sudo systemctl daemon-reload
+```
+
+**3. "Cannot get IP address"**
+- Kiểm tra internet connection
+- Bot sẽ thử nhiều service khác nhau
+
+**4. Email không gửi được**
+- Đảm bảo đã bật 2FA và tạo App Password
+- Kiểm tra SMTP settings
+- Test với telnet: `telnet smtp.gmail.com 587`
+
+**5. Telegram không hoạt động**
+- Kiểm tra bot token và chat ID
+- Đảm bảo đã nhắn tin với bot trước
+- Test API: `curl "https://api.telegram.org/bot<TOKEN>/getMe"`
+
+### Debug mode
+
+Thêm debug logging:
+```python
+logging.basicConfig(level=logging.DEBUG)
+```
+
+### Kiểm tra kết nối
+```bash
+# Test internet
+ping -c 3 8.8.8.8
+
+# Test DNS
+nslookup api.ipify.org
+
+# Test HTTPS
+curl -s https://api.ipify.org?format=json
+```
+
+## 📊 Giám sát
+
+### Tạo simple monitoring script
+```bash
+#!/bin/bash
+# monitor.sh
+
+if ! pgrep -f ip_monitor.py > /dev/null; then
+    echo "$(date): IP Monitor bot is down, restarting..."
+    cd ~/ip-monitor-bot
+    python3 ip_monitor.py &
+fi
+```
+
+Thêm vào crontab:
+```bash
+crontab -e
+# Thêm dòng này để kiểm tra mỗi 5 phút
+*/5 * * * * /path/to/monitor.sh
+```
+
+## 🔐 Bảo mật
+
+- **Không commit** file `config.json` lên git
+- **Sử dụng App Password** thay vì password thật cho email
+- **Giới hạn quyền file**: `chmod 600 config.json`
+- **Chạy với user thường**, không dùng root
+
+## 📈 Performance
+
+- **CPU usage**: ~0.1% khi idle
+- **Memory usage**: ~10-20MB
+- **Network**: 1-2KB per check
+- **Disk**: Log file tăng ~1MB/tháng
+
+## 🤝 Đóng góp
+
+1. Fork repository
+2. Tạo feature branch
+3. Commit changes
+4. Push và tạo Pull Request
+
+## 📄 License
+
+MIT License - xem file LICENSE để biết chi tiết.
+
+## 🆘 Hỗ trợ
+
+- **Issues**: Tạo issue trên GitHub
+- **Email**: your-email@domain.com
+- **Telegram**: @yourusername
+
+---
+
+**⭐ Nếu project hữu ích, hãy star repository!**
