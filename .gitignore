@@ -1,1 +1,6 @@
 .env
+*.log
+*.txt
+
+venv
+ip_monitor_env

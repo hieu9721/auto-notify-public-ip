@@ -28,7 +28,7 @@ cd ~/ip-monitor-bot
 ```
 
 ### 2. Tạo các file chính
-Tạo file `ip_monitor.py` với code từ repository này.
+Tạo file `main.py` với code từ repository này.
 
 ### 3. Cài đặt dependencies
 ```bash
@@ -46,7 +46,7 @@ nano .env
 
 ### 5. Kiểm tra hoạt động
 ```bash
-python3 ip_monitor.py --check-ip
+python3 main.py --check-ip
 ```
 
 ## ⚙️ Cấu hình chi tiết
@@ -160,13 +160,13 @@ NOTIFICATION_METHODS=telegram,discord
 ### Chạy thủ công
 ```bash
 # Kiểm tra IP hiện tại
-python3 ip_monitor.py --check-ip
+python3 main.py --check-ip
 
 # Chạy bot (Ctrl+C để dừng)
-python3 ip_monitor.py
+python3 main.py
 
 # Chạy với file config tùy chỉnh
-python3 ip_monitor.py --config my_config.json
+python3 main.py --config my_config.json
 ```
 
 ### Chạy như systemd service
@@ -182,7 +182,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$HOME/ip-monitor-bot
-ExecStart=/usr/bin/python3 $HOME/ip-monitor-bot/ip_monitor.py
+ExecStart=/usr/bin/python3 $HOME/ip-monitor-bot/main.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -285,10 +285,10 @@ docker stop ip-monitor && docker rm ip-monitor
 ### Log file
 ```bash
 # Xem log real-time
-tail -f ~/ip-monitor-bot/ip_monitor.log
+tail -f ~/ip-monitor-bot/main.log
 
 # Xem log cuối
-tail -20 ~/ip-monitor-bot/ip_monitor.log
+tail -20 ~/ip-monitor-bot/main.log
 ```
 
 ### System journal (nếu chạy như service)
@@ -361,25 +361,25 @@ Tạo script `manage.sh`:
 
 case "$1" in
     start)
-        python3 ip_monitor.py &
+        python3 main.py &
         echo "Bot started in background"
         ;;
     stop)
-        pkill -f ip_monitor.py
+        pkill -f main.py
         echo "Bot stopped"
         ;;
     status)
-        if pgrep -f ip_monitor.py > /dev/null; then
+        if pgrep -f main.py > /dev/null; then
             echo "Bot is running"
         else
             echo "Bot is not running"
         fi
         ;;
     ip)
-        python3 ip_monitor.py --check-ip
+        python3 main.py --check-ip
         ;;
     log)
-        tail -f ip_monitor.log
+        tail -f main.log
         ;;
     test-telegram)
         echo "Testing Telegram notifications..."
@@ -463,7 +463,7 @@ Hoặc chạy với debug:
 python3 -c "
 import logging
 logging.basicConfig(level=logging.DEBUG)
-exec(open('ip_monitor.py').read())
+exec(open('main.py').read())
 "
 ```
 
@@ -472,21 +472,21 @@ exec(open('ip_monitor.py').read())
 ```bash
 # Test lấy IP
 python3 -c "
-from ip_monitor import IPMonitor
+from main import IPMonitor
 monitor = IPMonitor()
 print('IP:', monitor.get_public_ip())
 "
 
 # Test Telegram
 python3 -c "
-from ip_monitor import IPMonitor
+from main import IPMonitor
 monitor = IPMonitor()
 monitor.send_telegram_notification('1.1.1.1', '2.2.2.2')
 "
 
 # Test Discord
 python3 -c "
-from ip_monitor import IPMonitor
+from main import IPMonitor
 monitor = IPMonitor()
 monitor.send_discord_notification('1.1.1.1', '2.2.2.2')
 "
@@ -499,10 +499,10 @@ monitor.send_discord_notification('1.1.1.1', '2.2.2.2')
 #!/bin/bash
 # monitor.sh
 
-if ! pgrep -f ip_monitor.py > /dev/null; then
+if ! pgrep -f main.py > /dev/null; then
     echo "$(date): IP Monitor bot is down, restarting..."
     cd ~/ip-monitor-bot
-    python3 ip_monitor.py &
+    python3 main.py &
 fi
 ```
 

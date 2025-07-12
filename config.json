@@ -1,0 +1,22 @@
+{
+    "check_interval": 300,
+    "notification_methods": [
+        "discord"
+    ],
+    "email": {
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "sender_email": "your-email@gmail.com",
+        "sender_password": "",
+        "recipient_email": "recipient@gmail.com"
+    },
+    "telegram": {
+        "bot_token": "",
+        "chat_ids": [],
+        "chat_id": ""
+    },
+    "discord": {
+        "webhook_urls": [],
+        "webhook_url": "https://discord.com/api/webhooks/1388807634429153311/cIdHskKC9r1-PLs63po5RzUk8bERP0JhGJyDsME23y1HKC5dpTWscC70OSkffsH6HR0f"
+    }
+}
